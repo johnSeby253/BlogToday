@@ -27,10 +27,9 @@ pipeline {
             }
         }
         
-        stage('Deploy') {
+       stage('Deploy') {
             steps {
-                // Deploy frontend build files
-                sh 'scp -r .next/* john@162.120.184.244:/var/www/blogToday'
+                echo "Skipping deploy: running locally"
             }
         }
     }

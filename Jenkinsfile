@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // Prepend the Node 22 binary path to PATH
+        // Prepend Node 22 binary to PATH
         PATH = "/home/john/.nvm/versions/node/v22.17.1/bin:$PATH"
     }
 
@@ -20,23 +20,30 @@ pipeline {
                 sh 'npm install'
             }
         }
-        
+
         stage('Build') {
             steps {
                 sh 'npm run build'
             }
         }
-        
-       stage('Deploy') {
+
+        stage('Run Locally') {
             steps {
-                echo "Skipping deploy: running locally...!!"
+                echo "Starting Next.js locally on port 3000..."
+                // Start the app in background
+                sh '''
+                nohup npm run start &
+                sleep 10  # wait for server to start
+                echo "Next.js should be running on localhost:3000"
+                curl -I http://localhost:3000 || echo "App did not start properly"
+                '''
             }
-        } 
+        }
     }
 
     post {
         success {
-            echo 'Frontend build & deploy successful!'
+            echo 'Frontend build & local run successful!'
         }
         failure {
             echo 'Build failed!'

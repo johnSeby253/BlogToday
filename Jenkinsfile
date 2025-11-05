@@ -31,7 +31,7 @@ pipeline {
             steps {
                 echo "Skipping deploy: running locally"
             }
-        }
+        } 
     }
 
     post {

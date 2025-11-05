@@ -29,7 +29,7 @@ pipeline {
         
        stage('Deploy') {
             steps {
-                echo "Skipping deploy: running locally"
+                echo "Skipping deploy: running locally...!!"
             }
         } 
     }

@@ -2,11 +2,35 @@ pipeline {
     agent any
 
     environment {
-        // Prepend Node 22 binary to PATH
-        PATH = "/home/john/.nvm/versions/node/v22.17.1/bin:$PATH"
+        NVM_DIR = "$HOME/.nvm"
     }
 
     stages {
+
+        stage('Install NVM + Node Stable') {
+            steps {
+                sh '''
+                # Install NVM if not exists
+                if [ ! -d "$NVM_DIR" ]; then
+                    echo "Installing NVM..."
+                    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+                fi
+
+                # Load NVM
+                . "$NVM_DIR/nvm.sh"
+
+                # Install stable Node (latest LTS)
+                nvm install --lts
+                nvm use --lts
+
+                echo "Node version:"
+                node -v
+                echo "npm version:"
+                npm -v
+                '''
+            }
+        }
+
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/johnSeby253/BlogToday.git'
@@ -15,27 +39,46 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'node -v'   // verify correct Node version
-                sh 'npm -v'    // verify npm version
-                sh 'npm install'
+                sh '''
+                . "$NVM_DIR/nvm.sh"
+                nvm use --lts
+                npm install
+                '''
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh '''
+                . "$NVM_DIR/nvm.sh"
+                nvm use --lts
+                npm test
+                '''
             }
         }
 
         stage('Build') {
             steps {
-                sh 'npm run build'
+                sh '''
+                . "$NVM_DIR/nvm.sh"
+                nvm use --lts
+                npm run build
+                '''
             }
         }
 
         stage('Run Locally') {
             steps {
-                echo "Starting Next.js locally on port 3000..."
-                // Start the app in background
                 sh '''
-                nohup npm run start &
-                sleep 10  # wait for server to start
-                echo "Next.js should be running on localhost:3000"
-                curl -I http://localhost:3000 || echo "App did not start properly"
+                . "$NVM_DIR/nvm.sh"
+                nvm use --lts
+
+                echo "Starting Next.js locally..."
+                nohup npm start &
+                sleep 10
+
+                echo "Testing localhost:3000..."
+                curl -I http://localhost:3000 || echo "App failed to start"
                 '''
             }
         }
@@ -43,10 +86,10 @@ pipeline {
 
     post {
         success {
-            echo 'Frontend build & local run successful!'
+            echo '✅ Frontend build & local server running successfully!'
         }
         failure {
-            echo 'Build failed!'
+            echo '❌ Build or tests failed!'
         }
     }
 }

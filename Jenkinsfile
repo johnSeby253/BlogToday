@@ -1,9 +1,8 @@
 pipeline {
     agent any
 
-    environment {
-        NVM_DIR = "/home/john/.nvm"
-        VERCEL_TOKEN = credentials('VERCEL_TOKEN')
+    tools {
+        nodejs "Node_20_LTS"
     }
 
     stages {
@@ -13,56 +12,24 @@ pipeline {
             }
         }
 
-        stage('Setup Node & NPM') {
-            steps {
-                sh '''
-                # Load NVM
-                export NVM_DIR="$NVM_DIR"
-                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-
-                # Install and use Node LTS (>= v20)
-                nvm install --lts
-                nvm use --lts
-
-                node -v
-                npm -v
-                '''
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
-                sh '''
-                export NVM_DIR="$NVM_DIR"
-                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-                nvm use --lts
-
-                npm install
-                '''
+                sh 'npm install'
             }
         }
 
         stage('Build Project') {
             steps {
-                sh '''
-                export NVM_DIR="$NVM_DIR"
-                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-                nvm use --lts
-
-                npm run build
-                '''
+                sh 'npm run build'
             }
         }
 
         stage('Deploy to Vercel') {
+            environment {
+                VERCEL_TOKEN = credentials('VERCEL_TOKEN')
+            }
             steps {
-                sh '''
-                export NVM_DIR="$NVM_DIR"
-                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-                nvm use --lts
-
-                npx vercel --prod --token $VERCEL_TOKEN --confirm
-                '''
+                sh 'npx vercel --prod --token $VERCEL_TOKEN --confirm'
             }
         }
     }

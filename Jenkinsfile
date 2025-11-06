@@ -42,16 +42,24 @@ pipeline {
                 sh '''
                 git config user.name "$GIT_USER"
                 git config user.email "$GIT_EMAIL"
-                git remote add target "$TARGET_REPO"
                 
-                # Optional: remove existing .git folder if you want a fresh push
-                # rm -rf .git
+                # Add remote if it doesn't exist
+                if ! git remote get-url target > /dev/null 2>&1; then
+                    git remote add target "$TARGET_REPO"
+                fi
 
-                git add .
-                git commit -m "Jenkins: Build & Deploy"
-                git push target main --force
+                # Commit only if there are changes
+                if [ -n "$(git status --porcelain)" ]; then
+                    git add .
+                    git commit -m "Jenkins: Build & Deploy"
+                    git branch -M main
+                    git push target main --force
+                else
+                    echo "No changes to commit"
+                fi
                 '''
             }
         }
+
     }
 }

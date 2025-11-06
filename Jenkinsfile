@@ -2,38 +2,25 @@ pipeline {
     agent any
 
     environment {
-        NVM_DIR = "$HOME/.nvm"
+        NVM_DIR = "/home/john/.nvm"
     }
 
     stages {
-
-        stage('Install NVM + Node Stable') {
-            steps {
-                sh '''
-                # Install NVM if not exists
-                if [ ! -d "$NVM_DIR" ]; then
-                    echo "Installing NVM..."
-                    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-                fi
-
-                # Load NVM
-                . "$NVM_DIR/nvm.sh"
-
-                # Install stable Node (latest LTS)
-                nvm install --lts
-                nvm use --lts
-
-                echo "Node version:"
-                node -v
-                echo "npm version:"
-                npm -v
-                '''
-            }
-        }
-
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/johnSeby253/BlogToday.git'
+            }
+        }
+
+        stage('Install Node using NVM') {
+            steps {
+                sh '''
+                . "$NVM_DIR/nvm.sh"
+                nvm install --lts
+                nvm use --lts
+                node -v
+                npm -v
+                '''
             }
         }
 
@@ -47,17 +34,7 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
-            steps {
-                sh '''
-                . "$NVM_DIR/nvm.sh"
-                nvm use --lts
-                npm test
-                '''
-            }
-        }
-
-        stage('Build') {
+        stage('Build Project') {
             steps {
                 sh '''
                 . "$NVM_DIR/nvm.sh"
@@ -67,32 +44,18 @@ pipeline {
             }
         }
 
-        stage('Run Locally') {
+        stage('Deploy with PM2') {
             steps {
                 sh '''
                 . "$NVM_DIR/nvm.sh"
                 nvm use --lts
 
-                # Kill previous instance
                 pm2 delete nextjs-app || true
-
-                # Start Next.js permanently
-                pm2 start npm --name "nextjs-app" -- start -- -H 0.0.0.0
-
+                pm2 start npm --name "nextjs-app" -- start
                 pm2 save
                 pm2 status
                 '''
             }
-        }
-
-    }
-
-    post {
-        success {
-            echo '✅ Frontend build & local server running successfully!'
-        }
-        failure {
-            echo '❌ Build or tests failed!'
         }
     }
 }

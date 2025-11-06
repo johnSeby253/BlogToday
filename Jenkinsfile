@@ -18,7 +18,7 @@ pipeline {
                 sh '''
                 # Load NVM
                 export NVM_DIR="$NVM_DIR"
-                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
                 # Install and use Node LTS (>= v20)
                 nvm install --lts
@@ -34,7 +34,7 @@ pipeline {
             steps {
                 sh '''
                 export NVM_DIR="$NVM_DIR"
-                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
                 nvm use --lts
 
                 npm install
@@ -46,7 +46,7 @@ pipeline {
             steps {
                 sh '''
                 export NVM_DIR="$NVM_DIR"
-                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
                 nvm use --lts
 
                 npm run build
@@ -58,7 +58,7 @@ pipeline {
             steps {
                 sh '''
                 export NVM_DIR="$NVM_DIR"
-                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
                 nvm use --lts
 
                 npx vercel --prod --token $VERCEL_TOKEN --confirm

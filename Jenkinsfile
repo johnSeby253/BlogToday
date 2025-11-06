@@ -73,15 +73,18 @@ pipeline {
                 . "$NVM_DIR/nvm.sh"
                 nvm use --lts
 
-                echo "Starting Next.js locally..."
-                nohup npm start &
-                sleep 10
+                # Kill previous instance
+                pm2 delete nextjs-app || true
 
-                echo "Testing localhost:3000..."
-                curl -I http://localhost:3000 || echo "App failed to start"
+                # Start Next.js permanently
+                pm2 start npm --name "nextjs-app" -- start -- -H 0.0.0.0
+
+                pm2 save
+                pm2 status
                 '''
             }
         }
+
     }
 
     post {

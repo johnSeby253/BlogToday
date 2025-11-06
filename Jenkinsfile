@@ -44,16 +44,15 @@ pipeline {
             }
         }
 
-        stage('Deploy with PM2') {
+        stage('Deploy to Vercel') {
+            environment {
+                VERCEL_TOKEN = credentials('VERCEL_TOKEN') 
+            }
             steps {
                 sh '''
                 . "$NVM_DIR/nvm.sh"
                 nvm use --lts
-
-                pm2 delete nextjs-app || true
-                pm2 start npm --name "nextjs-app" -- start
-                pm2 save
-                pm2 status
+                npx vercel --prod --token $VERCEL_TOKEN --confirm
                 '''
             }
         }

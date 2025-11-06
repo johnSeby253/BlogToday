@@ -37,29 +37,34 @@ pipeline {
             }
         }
 
-        stage('Push to blogtoday-test Repo') {
+        stage('Push Build to Test Repo') {
             steps {
                 sh '''
+                # Configure Git user
                 git config user.name "$GIT_USER"
                 git config user.email "$GIT_EMAIL"
-                
+
+                # Initialize Git if not already
+                if [ ! -d ".git" ]; then
+                    git init
+                fi
+
                 # Add remote if it doesn't exist
                 if ! git remote get-url target > /dev/null 2>&1; then
                     git remote add target "$TARGET_REPO"
                 fi
 
-                # Commit only if there are changes
-                if [ -n "$(git status --porcelain)" ]; then
-                    git add .
-                    git commit -m "Jenkins: Build & Deploy"
-                    git branch -M main
-                    git push target main --force
-                else
-                    echo "No changes to commit"
-                fi
+                # Force add the build folder (.next) and any other necessary files
+                git add .next public package.json package-lock.json
+
+                # Commit changes
+                git commit -m "Jenkins: Build & Deploy" || echo "No changes to commit"
+
+                # Push to target repo
+                git branch -M main
+                git push -u target main --force
                 '''
             }
         }
-
     }
 }

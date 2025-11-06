@@ -7,57 +7,61 @@ pipeline {
 
     environment {
         VERCEL_TOKEN = credentials('VERCEL_TOKEN')
-        GIT_USER = 'johnSeby253'
-        GIT_EMAIL = 'johnseby253@gmail.com'
-        TARGET_REPO = 'git@github.com:johnSeby253/blogtoday-test.git'
+        GIT_TOKEN = credentials('GIT_TOKEN')
+        REPO_URL = 'https://github.com/johnSeby253/BlogToday.git'
+        TEST_BRANCH = 'test'
     }
 
     stages {
-        stage('Checkout Dev Repo') {
+        stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/johnSeby253/BlogToday.git'
+                sh """
+                git clone --branch main https://$GIT_TOKEN@github.com/johnSeby253/BlogToday.git repo
+                cd repo
+                """
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                sh """
+                cd repo
+                npm install
+                """
             }
         }
 
         stage('Build Project') {
             steps {
-                sh 'npm run build'
+                sh """
+                cd repo
+                npm run build
+                """
             }
         }
 
-        stage('Push Build to Test Repo') {
+        stage('Push Build to Test Branch') {
             steps {
-                sh '''
-                # Configure Git
-                git config user.name "$GIT_USER"
-                git config user.email "$GIT_EMAIL"
+                sh """
+                cd repo
 
-                # Initialize Git if not exists
-                if [ ! -d ".git" ]; then
-                    git init
-                fi
+                # Initialize git if not already
+                git config user.name "johnSeby253"
+                git config user.email "johnseby253@gmail.com"
 
-                # Add target remote if not exists
-                if ! git remote get-url target > /dev/null 2>&1; then
-                    git remote add target "$TARGET_REPO"
-                fi
+                # Checkout test branch or create if it doesn't exist
+                git fetch origin $TEST_BRANCH || true
+                git checkout -B $TEST_BRANCH
 
-                # Force add build files (ignore .gitignore)
+                # Force add build files
                 git add -f .next public package.json package-lock.json
 
-                # Commit changes
+                # Commit if there are changes
                 git commit -m "Jenkins: Build & Deploy" || echo "No changes to commit"
 
-                # Push to test repo
-                git branch -M main
-                git push -u target main --force
-                '''
+                # Push to test branch using HTTPS token
+                git push https://$GIT_TOKEN@github.com/johnSeby253/BlogToday.git $TEST_BRANCH --force
+                """
             }
         }
     }

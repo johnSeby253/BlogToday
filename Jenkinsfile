@@ -6,9 +6,7 @@ pipeline {
     }
 
     environment {
-        VERCEL_TOKEN = credentials('VERCEL_TOKEN')
         GIT_TOKEN = credentials('GIT_TOKEN')
-        SOURCE_REPO = 'https://github.com/johnSeby253/BlogToday.git'
         TARGET_REPO = 'https://github.com/johnSeby253/blogtoday-test.git'
         TARGET_BRANCH = 'main'
     }
@@ -17,8 +15,8 @@ pipeline {
         stage('Checkout Source Repo') {
             steps {
                 sh """
+                rm -rf repo
                 git clone --branch main https://$GIT_TOKEN@github.com/johnSeby253/BlogToday.git repo
-                cd repo
                 """
             }
         }
@@ -50,20 +48,22 @@ pipeline {
                 git config user.name "johnSeby253"
                 git config user.email "johnseby253@gmail.com"
 
-                # Add target remote if it doesn't exist
-                git remote add target https://$GIT_TOKEN@github.com/johnSeby253/blogtoday-test.git || true
+                # Add target remote if not exists
+                if ! git remote get-url target > /dev/null 2>&1; then
+                  git remote add target https://$GIT_TOKEN@github.com/johnSeby253/blogtoday-test.git
+                fi
 
-                # Checkout main branch of target repo
+                # Checkout target branch
                 git fetch target $TARGET_BRANCH || true
                 git checkout -B $TARGET_BRANCH
 
                 # Force add build files
                 git add -f .next public package.json package-lock.json
 
-                # Commit if changes exist
+                # Commit changes
                 git commit -m "Jenkins: Build & Deploy" || echo "No changes to commit"
 
-                # Push to target repo main branch
+                # Push to target branch
                 git push target $TARGET_BRANCH --force
                 """
             }

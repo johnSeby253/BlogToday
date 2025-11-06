@@ -29,7 +29,7 @@ pipeline {
                 VERCEL_TOKEN = credentials('VERCEL_TOKEN')
             }
             steps {
-                sh 'npx vercel --prod --token $VERCEL_TOKEN --confirm'
+                sh 'npx vercel --prod --token $VERCEL_TOKEN --yes --name blogtoday-next'
             }
         }
     }

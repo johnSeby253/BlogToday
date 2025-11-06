@@ -6,6 +6,6 @@ describe('Home Page', () => {
     const { container } = render(<Page />);
     
     // container.firstChild refers to the root div in your component
-    expect(container.firstChild).toHaveClass('bg-red-600');
+    expect(container.firstChild).toHaveClass('bg-amber-300');
   });
 });

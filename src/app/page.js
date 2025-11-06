@@ -25,8 +25,8 @@ const page = () => {
   //  }, []);
 
   return (
-    <div className='bg-red-600'>
-        <h1>Hellooooooo</h1>
+    <div className='bg-amber-300 text-amber-900 w-full h-[30px]'>
+        <h1>Testing The Work Flow....</h1>
     </div>
   )
 }

@@ -13,7 +13,7 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Dev Repo') {
             steps {
                 git branch: 'main', url: 'https://github.com/johnSeby253/BlogToday.git'
             }
@@ -31,36 +31,30 @@ pipeline {
             }
         }
 
-        stage('Deploy to Vercel') {
-            steps {
-                sh 'npx vercel --prod --token $VERCEL_TOKEN --yes --name blogtoday-next'
-            }
-        }
-
         stage('Push Build to Test Repo') {
             steps {
                 sh '''
-                # Configure Git user
+                # Configure Git
                 git config user.name "$GIT_USER"
                 git config user.email "$GIT_EMAIL"
 
-                # Initialize Git if not already
+                # Initialize Git if not exists
                 if [ ! -d ".git" ]; then
                     git init
                 fi
 
-                # Add remote if it doesn't exist
+                # Add target remote if not exists
                 if ! git remote get-url target > /dev/null 2>&1; then
                     git remote add target "$TARGET_REPO"
                 fi
 
-                # Force add the build folder (.next) and any other necessary files
-                git add .next public package.json package-lock.json
+                # Force add build files (ignore .gitignore)
+                git add -f .next public package.json package-lock.json
 
                 # Commit changes
                 git commit -m "Jenkins: Build & Deploy" || echo "No changes to commit"
 
-                # Push to target repo
+                # Push to test repo
                 git branch -M main
                 git push -u target main --force
                 '''

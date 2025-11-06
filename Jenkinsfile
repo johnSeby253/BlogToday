@@ -8,12 +8,13 @@ pipeline {
     environment {
         VERCEL_TOKEN = credentials('VERCEL_TOKEN')
         GIT_TOKEN = credentials('GIT_TOKEN')
-        REPO_URL = 'https://github.com/johnSeby253/BlogToday.git'
-        TEST_BRANCH = 'test'
+        SOURCE_REPO = 'https://github.com/johnSeby253/BlogToday.git'
+        TARGET_REPO = 'https://github.com/johnSeby253/blogtoday-test.git'
+        TARGET_BRANCH = 'main'
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Source Repo') {
             steps {
                 sh """
                 git clone --branch main https://$GIT_TOKEN@github.com/johnSeby253/BlogToday.git repo
@@ -40,27 +41,30 @@ pipeline {
             }
         }
 
-        stage('Push Build to Test Branch') {
+        stage('Push Build to Target Repo') {
             steps {
                 sh """
                 cd repo
 
-                # Initialize git if not already
+                # Configure Git user
                 git config user.name "johnSeby253"
                 git config user.email "johnseby253@gmail.com"
 
-                # Checkout test branch or create if it doesn't exist
-                git fetch origin $TEST_BRANCH || true
-                git checkout -B $TEST_BRANCH
+                # Add target remote if it doesn't exist
+                git remote add target https://$GIT_TOKEN@github.com/johnSeby253/blogtoday-test.git || true
+
+                # Checkout main branch of target repo
+                git fetch target $TARGET_BRANCH || true
+                git checkout -B $TARGET_BRANCH
 
                 # Force add build files
                 git add -f .next public package.json package-lock.json
 
-                # Commit if there are changes
+                # Commit if changes exist
                 git commit -m "Jenkins: Build & Deploy" || echo "No changes to commit"
 
-                # Push to test branch using HTTPS token
-                git push https://$GIT_TOKEN@github.com/johnSeby253/BlogToday.git $TEST_BRANCH --force
+                # Push to target repo main branch
+                git push target $TARGET_BRANCH --force
                 """
             }
         }
